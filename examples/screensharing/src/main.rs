@@ -40,7 +40,10 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
+    env_logger::builder()
+        .filter(Some(env!("CARGO_CRATE_NAME")), log::LevelFilter::Info)
+        .parse_default_env()
+        .init();
     let args = Args::parse();
 
     let url = env::var("LIVEKIT_URL").expect("LIVEKIT_URL is not set");
@@ -172,6 +175,7 @@ async fn main() {
         }
     };
 
+    log::info!("Starting desktop capture. Press Ctrl + C to quit.");
     capturer.start_capture(selected_source);
 
     let ctrl_c_received = Arc::new(AtomicBool::new(false));
@@ -185,6 +189,7 @@ async fn main() {
 
     loop {
         if ctrl_c_received.load(Ordering::Acquire) == true {
+            log::info!("Ctrl + C received, stopping desktop capture.");
             break;
         }
 
