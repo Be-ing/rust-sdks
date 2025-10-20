@@ -155,7 +155,7 @@ fn main() {
 
     println!("cargo:rustc-link-search=native={}", webrtc_lib.to_str().unwrap());
 
-    for (key, value) in webrtc_sys_build::webrtc_defines() {
+    for (key, value) in webrtc_sys_build::webrtc_defines(&webrtc_dir) {
         let value = value.as_deref();
         builder.define(key.as_str(), value);
     }

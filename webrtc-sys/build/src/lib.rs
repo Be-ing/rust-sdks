@@ -18,7 +18,7 @@ use std::{
     env,
     fs::{self, File},
     io::{self, BufRead, Write},
-    path,
+    path::{self, Path},
     process::Command,
 };
 
@@ -115,13 +115,14 @@ pub fn webrtc_dir() -> path::PathBuf {
     prebuilt_dir()
 }
 
-pub fn webrtc_defines() -> Vec<(String, Option<String>)> {
+pub fn webrtc_defines(dir: impl AsRef<Path>) -> Vec<(String, Option<String>)> {
+    let dir = dir.as_ref();
     // read preprocessor definitions from webrtc.ninja
     let defines_re = Regex::new(r"-D(\w+)(?:=([^\s]+))?").unwrap();
-    let mut files = vec![webrtc_dir().join("webrtc.ninja")];
+    let mut files = vec![dir.join("webrtc.ninja")];
 
     // Avoid ABI mismatch for DesktopCaptureOptions due to WEBRTC_USE_X11 missing
-    let desktop_capture_path = webrtc_dir().join("desktop_capture.ninja");
+    let desktop_capture_path = dir.join("desktop_capture.ninja");
     if cfg!(target_os = "linux") {
         files.push(desktop_capture_path);
     } else if desktop_capture_path.exists() {
