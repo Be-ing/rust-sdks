@@ -79,12 +79,12 @@ async fn main() {
         .unwrap();
 
     let buffer_source_clone = buffer_source.clone();
-    let video_frame = Arc::new(Mutex::new(VideoFrame {
+    let mut video_frame = VideoFrame {
         rotation: VideoRotation::VideoRotation0,
         buffer: I420Buffer::new(stream_width, stream_height),
         timestamp_us: 0,
-    }));
-    let capture_buffer = Arc::new(Mutex::new(I420Buffer::new(stream_width, stream_height)));
+    };
+    let mut capture_buffer = I420Buffer::new(stream_width, stream_height);
     let callback = move |result: CaptureResult, frame: DesktopFrame| {
         match result {
             CaptureResult::ErrorTemporary => {
@@ -97,23 +97,20 @@ async fn main() {
             }
             _ => {}
         }
-        let video_frame = video_frame.clone();
         let height = frame.height();
         let width = frame.width();
 
         {
-            let mut capture_buffer = capture_buffer.lock().unwrap();
             let capture_buffer_width = capture_buffer.width() as i32;
             let capture_buffer_height = capture_buffer.height() as i32;
             if height != capture_buffer_height || width != capture_buffer_width {
-                *capture_buffer = I420Buffer::new(width as u32, height as u32);
+                capture_buffer = I420Buffer::new(width as u32, height as u32);
             }
         }
 
         let stride = frame.stride();
         let data = frame.data();
 
-        let mut capture_buffer = capture_buffer.lock().unwrap();
         let (s_y, s_u, s_v) = capture_buffer.strides();
         let (y, u, v) = capture_buffer.data_mut();
         yuv_helper::argb_to_i420(data, stride, y, s_y, u, s_u, v, s_v, width, height);
@@ -121,14 +118,13 @@ async fn main() {
         let scaled_buffer = capture_buffer.scale(stream_width as i32, stream_height as i32);
         let (scaled_y, scaled_u, scaled_v) = scaled_buffer.data();
 
-        let mut framebuffer = video_frame.lock().unwrap();
-        let buffer = &mut framebuffer.buffer;
+        let buffer = &mut video_frame.buffer;
         let (y, u, v) = buffer.data_mut();
         y.copy_from_slice(scaled_y);
         u.copy_from_slice(scaled_u);
         v.copy_from_slice(scaled_v);
 
-        buffer_source_clone.capture_frame(&*framebuffer);
+        buffer_source_clone.capture_frame(&video_frame);
     };
     let source_type = if args.capture_window {
         DesktopCaptureSourceType::WINDOW
