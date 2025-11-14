@@ -15,8 +15,8 @@
 name: WebRTC builds
 on:
   push:
-#    tags:
-#      - "webrtc-*"
+  #    tags:
+  #      - "webrtc-*"
   workflow_dispatch:
 
 jobs:
@@ -110,7 +110,7 @@ jobs:
       - name: install setuptools (none-macOS)
         if: ${{ matrix.target.os != 'macos-latest' }}
         run: |
-         pip3 install setuptools # pkg_resources is sometimes not found?
+          pip3 install setuptools # pkg_resources is sometimes not found?
 
       - name: Add GCC PPA and install GCC 14
         if: ${{ matrix.target.os == 'ubuntu-latest' }}
@@ -135,12 +135,26 @@ jobs:
           sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-14 140 --slave /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-14
           sudo update-alternatives --config aarch64-linux-gnu-gcc
           aarch64-linux-gnu-gcc --version
-      
+
       - name: Install linux dependencies
         if: ${{ matrix.target.os == 'ubuntu-latest' }}
         run: |
           sudo apt update -y
-          sudo apt install -y ninja-build pkg-config openjdk-11-jdk
+          sudo apt install -y \
+            ninja-build \
+            pkg-config \
+            openjdk-11-jdk \
+            libva-dev \
+            libpipewire-0.3-dev \
+            libdrm-dev \
+            libgbm-dev \
+            libx11-dev \
+            libxfixes-dev \
+            libxdamage-dev \
+            libxrandr-dev \
+            libxcomposite-dev \
+            libxext-dev \
+            libglib-2.0-dev
 
       - name: Install macos dependencies
         if: ${{ matrix.target.os == 'macos-latest' }}
